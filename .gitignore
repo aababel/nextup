@@ -39,3 +39,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# seed-titles-omdb.mjs output (generated, not source)
+titles-seed.json
+titles-failed.json
+failed.log
+review-needed.log
+processed_ids.json

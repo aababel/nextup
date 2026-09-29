@@ -46,3 +46,8 @@ titles-failed.json
 failed.log
 review-needed.log
 processed_ids.json
+
+# seed-titles-tmdb.mjs output
+titles-tmdb-seed.json
+tmdb-review-needed.log
+tmdb-failed.log

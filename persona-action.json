@@ -1,0 +1,23 @@
+{
+  "quiz_responses": [
+    { "title": "John Wick", "genres": ["Action", "Crime", "Thriller"], "overview": "A retired hitman seeks revenge against the gangsters who took everything from him.", "release_year": 2014, "response": "loved" },
+    { "title": "Top Gun: Maverick", "genres": ["Action", "Drama"], "overview": "A test pilot trains a new generation of graduates for a dangerous mission.", "release_year": 2022, "response": "loved" },
+    { "title": "Mad Max: Fury Road", "genres": ["Action", "Adventure", "Sci-Fi"], "overview": "A woman rebels against a tyrannical ruler in a post-apocalyptic wasteland.", "release_year": 2015, "response": "loved" },
+    { "title": "Die Hard", "genres": ["Action", "Thriller"], "overview": "An NYPD cop tries to save hostages from terrorists during a Christmas Eve party.", "release_year": 1988, "response": "loved" },
+    { "title": "The Dark Knight", "genres": ["Action", "Crime", "Drama"], "overview": "Batman faces the Joker, a criminal mastermind bent on chaos in Gotham.", "release_year": 2008, "response": "loved" },
+    { "title": "Speed", "genres": ["Action", "Adventure", "Thriller"], "overview": "A cop must keep a bus above 50 mph or a bomb will detonate.", "release_year": 1994, "response": "liked" },
+    { "title": "Terminator 2: Judgment Day", "genres": ["Action", "Adventure", "Sci-Fi"], "overview": "A cyborg protects a boy from a more advanced killing machine sent from the future.", "release_year": 1991, "response": "liked" },
+    { "title": "Heat", "genres": ["Action", "Crime", "Drama"], "overview": "A crew of professional thieves clash with an obsessive detective in Los Angeles.", "release_year": 1995, "response": "liked" },
+    { "title": "Aftersun", "genres": ["Drama"], "overview": "A young woman reflects on a holiday she took with her father twenty years earlier, piecing together memory and loss.", "release_year": 2022, "response": "not_for_me" },
+    { "title": "The Zone of Interest", "genres": ["Drama", "History", "War"], "overview": "A commandant and his wife build an idyllic life next door to the horror they oversee.", "release_year": 2023, "response": "not_for_me" },
+    { "title": "Drive My Car", "genres": ["Drama"], "overview": "A theater director processes grief while directing a multilingual stage production.", "release_year": 2021, "response": "not_for_me" },
+    { "title": "Anatomy of a Fall", "genres": ["Crime", "Drama", "Mystery"], "overview": "A woman is suspected in her husband's death as their son grapples with what he may have witnessed.", "release_year": 2023, "response": "not_for_me" },
+    { "title": "Shogun", "genres": ["Action", "Adventure", "Drama"], "overview": "An English sailor is caught in a power struggle in feudal Japan.", "release_year": 2024, "response": "havent_seen" }
+  ],
+  "framing_answers": [
+    { "question": "Do you prefer being comforted or challenged by what you watch?", "answer": "Comforted, honestly. I watch to unwind, not to process something heavy." },
+    { "question": "Fast-paced or slow-burn?", "answer": "Fast-paced, no contest. If nothing's happened in the first ten minutes I lose interest." },
+    { "question": "Do you watch alone or with others most often?", "answer": "Usually with friends — these are the movies you put on when people are over." },
+    { "question": "How much do you care about a 'happy' ending?", "answer": "A lot. I want the good guy to win, that's the whole point." }
+  ]
+}

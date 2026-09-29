@@ -1,0 +1,23 @@
+{
+  "quiz_responses": [
+    { "title": "Aftersun", "genres": ["Drama"], "overview": "A young woman reflects on a holiday she took with her father twenty years earlier, piecing together memory and loss.", "release_year": 2022, "response": "loved" },
+    { "title": "Past Lives", "genres": ["Drama", "Romance"], "overview": "Two childhood friends reconnect decades after one emigrated, confronting what might have been.", "release_year": 2023, "response": "loved" },
+    { "title": "Roma", "genres": ["Drama"], "overview": "A year in the life of a domestic worker for a middle-class family in 1970s Mexico City.", "release_year": 2018, "response": "loved" },
+    { "title": "The Zone of Interest", "genres": ["Drama", "History", "War"], "overview": "A commandant and his wife build an idyllic life next door to the horror they oversee.", "release_year": 2023, "response": "loved" },
+    { "title": "Portrait of a Lady on Fire", "genres": ["Drama", "Romance"], "overview": "A painter is commissioned to secretly paint a young woman's wedding portrait on an isolated island.", "release_year": 2019, "response": "loved" },
+    { "title": "Drive My Car", "genres": ["Drama"], "overview": "A theater director processes grief while directing a multilingual stage production.", "release_year": 2021, "response": "liked" },
+    { "title": "Anatomy of a Fall", "genres": ["Crime", "Drama", "Mystery"], "overview": "A woman is suspected in her husband's death as their son grapples with what he may have witnessed.", "release_year": 2023, "response": "liked" },
+    { "title": "Nomadland", "genres": ["Drama"], "overview": "A woman in her sixties becomes a van-dwelling modern nomad after losing everything in the recession.", "release_year": 2020, "response": "liked" },
+    { "title": "John Wick", "genres": ["Action", "Crime", "Thriller"], "overview": "A retired hitman seeks revenge against the gangsters who took everything from him.", "release_year": 2014, "response": "not_for_me" },
+    { "title": "Top Gun: Maverick", "genres": ["Action", "Drama"], "overview": "A test pilot trains a new generation of graduates for a dangerous mission.", "release_year": 2022, "response": "not_for_me" },
+    { "title": "Mad Max: Fury Road", "genres": ["Action", "Adventure", "Sci-Fi"], "overview": "A woman rebels against a tyrannical ruler in a post-apocalyptic wasteland.", "release_year": 2015, "response": "not_for_me" },
+    { "title": "Die Hard", "genres": ["Action", "Thriller"], "overview": "An NYPD cop tries to save hostages from terrorists during a Christmas Eve party.", "release_year": 1988, "response": "not_for_me" },
+    { "title": "Shogun", "genres": ["Action", "Adventure", "Drama"], "overview": "An English sailor is caught in a power struggle in feudal Japan.", "release_year": 2024, "response": "havent_seen" }
+  ],
+  "framing_answers": [
+    { "question": "Do you prefer being comforted or challenged by what you watch?", "answer": "Challenged, mostly. I want something that sits with me after, even if it's uncomfortable." },
+    { "question": "Fast-paced or slow-burn?", "answer": "Slow-burn, almost always. I'd rather spend two hours inside one feeling than have a dozen things happen." },
+    { "question": "Do you watch alone or with others most often?", "answer": "Mostly alone — these aren't really movies I want to talk through in real time." },
+    { "question": "How much do you care about a 'happy' ending?", "answer": "Not much. An honest ending matters more than a comforting one." }
+  ]
+}

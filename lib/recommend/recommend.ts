@@ -1,5 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { SYSTEM_PROMPT, formatRecommendInput } from "./prompt";
+import { SYSTEM_PROMPT, buildCandidateRefMap, formatRecommendInput } from "./prompt";
 import type { Candidate } from "./candidates";
 import type { TasteProfile } from "@/lib/taste-profile/synthesize";
 
@@ -10,6 +10,20 @@ export type Pick = {
 
 export type PassedOver = {
   title_id: string;
+  why_not: string;
+};
+
+// What Claude returns: candidates are identified by their prompt ref, not
+// their title_id. validateShape maps these back to Pick / PassedOver.
+type RawPick = {
+  ref: number;
+  name: string;
+  why_it_fits: string;
+};
+
+type RawPassedOver = {
+  ref: number;
+  name: string;
   why_not: string;
 };
 
@@ -24,7 +38,8 @@ export type RecommendFailureReason =
   | "empty_response"
   | "invalid_json"
   | "invalid_shape"
-  | "unknown_title";
+  | "unknown_title"
+  | "mismatched_title";
 
 export class RecommendError extends Error {
   reason: RecommendFailureReason;
@@ -46,53 +61,90 @@ function stripCodeFence(text: string): string {
   return fenced ? fenced[1] : trimmed;
 }
 
-function isPick(value: unknown): value is Pick {
+function isRawPick(value: unknown): value is RawPick {
   if (typeof value !== "object" || value === null) return false;
   const v = value as Record<string, unknown>;
-  return typeof v.title_id === "string" && typeof v.why_it_fits === "string";
+  return (
+    Number.isInteger(v.ref) &&
+    typeof v.name === "string" &&
+    typeof v.why_it_fits === "string"
+  );
 }
 
-function isPassedOver(value: unknown): value is PassedOver {
+function isRawPassedOver(value: unknown): value is RawPassedOver {
   if (typeof value !== "object" || value === null) return false;
   const v = value as Record<string, unknown>;
-  return typeof v.title_id === "string" && typeof v.why_not === "string";
+  return (
+    Number.isInteger(v.ref) &&
+    typeof v.name === "string" &&
+    typeof v.why_not === "string"
+  );
+}
+
+function normalizeName(name: string): string {
+  return name.trim().toLowerCase();
 }
 
 /**
- * Validates the shape of Claude's response and, critically, that every
- * title_id it returned is actually in the candidate set it was given — the
- * hallucination guard. Throws RecommendError on any failure.
+ * Resolves a ref Claude returned to its candidate. The ref must exist (the
+ * hallucination guard), and the name Claude echoed back must match that
+ * candidate's name — catches the model attaching an explanation written for
+ * one title to a different, also-valid ref.
  */
-function validateShape(data: unknown, candidateIds: Set<string>): RecommendationResult {
+function resolveRef(
+  { ref, name }: { ref: number; name: string },
+  candidateByRef: Map<number, Candidate>
+): Candidate {
+  const candidate = candidateByRef.get(ref);
+  if (!candidate) {
+    throw new RecommendError("unknown_title", `Claude returned a ref not in the candidate set: ${ref}`);
+  }
+  if (normalizeName(name) !== normalizeName(candidate.name)) {
+    throw new RecommendError(
+      "mismatched_title",
+      `Claude returned ref ${ref} with name "${name}", but that ref is "${candidate.name}"`
+    );
+  }
+  return candidate;
+}
+
+/**
+ * Validates the shape of Claude's response, checks every ref against the
+ * candidate set (see resolveRef), and maps refs back to real title_ids.
+ * Throws RecommendError on any failure.
+ */
+function validateShape(data: unknown, candidateByRef: Map<number, Candidate>): RecommendationResult {
   if (typeof data !== "object" || data === null) {
     throw new RecommendError("invalid_shape", "Response was not a JSON object");
   }
   const d = data as Record<string, unknown>;
 
-  if (!Array.isArray(d.picks) || !d.picks.every(isPick)) {
-    throw new RecommendError("invalid_shape", `Field "picks" must be an array of { title_id, why_it_fits }`);
+  if (!Array.isArray(d.picks) || !d.picks.every(isRawPick)) {
+    throw new RecommendError("invalid_shape", `Field "picks" must be an array of { ref, name, why_it_fits }`);
   }
   if (d.picks.length < 2 || d.picks.length > 3) {
     throw new RecommendError("invalid_shape", `Field "picks" must contain 2-3 items, got ${d.picks.length}`);
   }
 
-  let passedOver: PassedOver[] = [];
+  let rawPassedOver: RawPassedOver[] = [];
   if (d.passed_over !== undefined) {
-    if (!Array.isArray(d.passed_over) || !d.passed_over.every(isPassedOver)) {
-      throw new RecommendError("invalid_shape", `Field "passed_over" must be an array of { title_id, why_not }`);
+    if (!Array.isArray(d.passed_over) || !d.passed_over.every(isRawPassedOver)) {
+      throw new RecommendError("invalid_shape", `Field "passed_over" must be an array of { ref, name, why_not }`);
     }
     if (d.passed_over.length > 2) {
       throw new RecommendError("invalid_shape", `Field "passed_over" must contain 0-2 items, got ${d.passed_over.length}`);
     }
-    passedOver = d.passed_over;
+    rawPassedOver = d.passed_over;
   }
 
-  const picks = d.picks as Pick[];
-  for (const { title_id } of [...picks, ...passedOver]) {
-    if (!candidateIds.has(title_id)) {
-      throw new RecommendError("unknown_title", `Claude returned a title_id not in the candidate set: ${title_id}`);
-    }
-  }
+  const picks: Pick[] = (d.picks as RawPick[]).map((raw) => ({
+    title_id: resolveRef(raw, candidateByRef).id,
+    why_it_fits: raw.why_it_fits,
+  }));
+  const passedOver: PassedOver[] = rawPassedOver.map((raw) => ({
+    title_id: resolveRef(raw, candidateByRef).id,
+    why_not: raw.why_not,
+  }));
 
   return { picks, passed_over: passedOver };
 }
@@ -108,7 +160,7 @@ export async function getRecommendations(
   context: string,
   candidates: Candidate[]
 ): Promise<RecommendationResult> {
-  const candidateIds = new Set(candidates.map((c) => c.id));
+  const candidateByRef = buildCandidateRefMap(candidates);
   const userMessage = formatRecommendInput(profile, context, candidates);
 
   let response;
@@ -145,5 +197,5 @@ export async function getRecommendations(
     );
   }
 
-  return validateShape(parsed, candidateIds);
+  return validateShape(parsed, candidateByRef);
 }

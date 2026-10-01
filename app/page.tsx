@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getHomePath } from "@/lib/routing/home-path";
 
 export default async function Home() {
   const supabase = await createClient();
@@ -7,5 +8,9 @@ export default async function Home() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  redirect(user ? "/quiz" : "/login");
+  if (!user) {
+    redirect("/login");
+  }
+
+  redirect(await getHomePath(supabase, user.id));
 }

@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { FRAMING_QUESTIONS } from "@/lib/quiz/framing-questions";
 import { QUIZ_TITLE_COUNT } from "@/lib/quiz/config";
+import { getHomePath } from "@/lib/routing/home-path";
 import { QuizClient } from "./QuizClient";
 
 function shuffle<T>(items: T[]): T[] {
@@ -21,6 +22,12 @@ export default async function QuizPage() {
 
   if (!user) {
     redirect("/login");
+  }
+
+  // Users who already have a taste profile are done with the quiz.
+  // TODO(Day 7): a "retake / rate more titles" flow would bypass this redirect.
+  if ((await getHomePath(supabase, user.id)) === "/ask") {
+    redirect("/ask");
   }
 
   const [answeredTitlesRes, answeredFramingRes, titlesRes] = await Promise.all([

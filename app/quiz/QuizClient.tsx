@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
+import { SignOutButton } from "@/components/SignOutButton";
 import type { FramingQuestion } from "@/lib/quiz/framing-questions";
 import {
   submitFramingResponse,
@@ -170,21 +170,10 @@ export function QuizClient({
 }
 
 function Header({ userEmail }: { userEmail: string }) {
-  const router = useRouter();
-
-  async function handleSignOut() {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    router.push("/login");
-    router.refresh();
-  }
-
   return (
     <div className="flex items-center justify-between px-6 py-4 text-xs text-zinc-500 dark:text-zinc-400">
       <span>{userEmail}</span>
-      <button onClick={handleSignOut} className="underline hover:text-zinc-900 dark:hover:text-zinc-50">
-        Sign out
-      </button>
+      <SignOutButton />
     </div>
   );
 }

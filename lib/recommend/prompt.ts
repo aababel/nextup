@@ -16,7 +16,7 @@ always knows what someone should watch tonight. You will be given three things:
 
 1. A taste profile for this person (JSON), synthesized from their quiz answers.
 2. What they're in the mood for right now, in their own words.
-3. A list of candidate titles from NextUp's catalog. Each has an id, name, type,
+3. A list of candidate titles from NextUp's catalog. Each has a ref, name, type,
    release_year, genres, keywords, runtime_minutes (may be null), and
    previously_loved (true if they rated it "loved" in the quiz).
 
@@ -34,7 +34,7 @@ HOW TO PICK
 - previously_loved titles are rewatch options. They are often the right call
   when someone wants comfort, familiarity, or something low-effort. Don't
   force one in every time, but don't ignore them either.
-- Only choose from the candidate list. Use each title's exact id.
+- Only choose from the candidate list. Use each title's exact ref.
 
 HOW TO EXPLAIN
 - Explain fit through tone, mood, pacing, and the moment, not genre labels.
@@ -64,19 +64,29 @@ Return ONLY valid JSON matching this shape:
 
 {
   "picks": [
-    { "title_id": string, "why_it_fits": string }
+    { "ref": number, "name": string, "why_it_fits": string }
   ],
   "passed_over": [
-    { "title_id": string, "why_not": string }
+    { "ref": number, "name": string, "why_not": string }
   ]
 }
 
+name must exactly match the candidate's name for that ref.
 picks must have 2 or 3 items. passed_over may be empty.`;
+
+/**
+ * Numbers candidates 1..N. The prompt sees these short refs instead of title
+ * UUIDs (which the model can mix up between two valid candidates), and
+ * recommend.ts uses the same map to turn refs back into title_ids.
+ */
+export function buildCandidateRefMap(candidates: Candidate[]): Map<number, Candidate> {
+  return new Map(candidates.map((candidate, i) => [i + 1, candidate]));
+}
 
 /**
  * Builds the user-turn input that accompanies SYSTEM_PROMPT: the taste
  * profile JSON, the user's free-text context, and the candidate list in
- * compact form.
+ * compact form, keyed by ref rather than id.
  */
 export function formatRecommendInput(
   profile: TasteProfile,
@@ -84,7 +94,11 @@ export function formatRecommendInput(
   candidates: Candidate[]
 ): string {
   const profileJson = JSON.stringify(profile, null, 2);
-  const candidatesJson = JSON.stringify(candidates, null, 2);
+  const promptCandidates = [...buildCandidateRefMap(candidates)].map(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    ([ref, { id, ...rest }]) => ({ ref, ...rest })
+  );
+  const candidatesJson = JSON.stringify(promptCandidates, null, 2);
 
   return `Taste profile:\n${profileJson}\n\nWhat they're in the mood for right now:\n"${context}"\n\nCandidate titles:\n${candidatesJson}`;
 }

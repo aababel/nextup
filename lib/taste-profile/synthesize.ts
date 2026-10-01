@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { SYSTEM_PROMPT, formatSynthesisInput } from "./prompt";
-import { effortFromEnv, logUsage, modelFromEnv } from "@/lib/claude-config";
+import { effortFromEnv, logUsage, modelFromEnv, thinkingFromEnv } from "@/lib/claude-config";
 
 export type QuizResponseInput = {
   title: string;
@@ -47,6 +47,7 @@ export class SynthesisError extends Error {
 
 const MODEL = modelFromEnv("PROFILE_MODEL", "claude-opus-4-8");
 const EFFORT = effortFromEnv("PROFILE_EFFORT", "high");
+const THINKING = thinkingFromEnv("PROFILE_THINKING", "adaptive");
 
 // A model instructed to "return ONLY valid JSON" will still occasionally wrap
 // the object in a ```json fence — strip one if present before parsing.
@@ -116,8 +117,12 @@ export async function synthesizeTasteProfile(
     response = await anthropic.messages.create({
       model: MODEL,
       max_tokens: 4096,
-      thinking: { type: "adaptive" },
-      output_config: { effort: EFFORT },
+      // Smaller models (e.g. Haiku) reject adaptive thinking and effort, so
+      // "off" omits both params entirely.
+      ...(THINKING === "adaptive" && {
+        thinking: { type: "adaptive" },
+        output_config: { effort: EFFORT },
+      }),
       system: SYSTEM_PROMPT,
       messages: [{ role: "user", content: userMessage }],
     });
@@ -125,7 +130,7 @@ export async function synthesizeTasteProfile(
     throw new SynthesisError("api_error", err instanceof Error ? err.message : String(err));
   }
 
-  logUsage("profile", MODEL, response.usage);
+  logUsage("profile", MODEL, THINKING, response.usage);
 
   if (response.stop_reason === "refusal") {
     throw new SynthesisError("refusal", "Claude declined to synthesize a profile for this input");

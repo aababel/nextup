@@ -2,6 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { SYSTEM_PROMPT, buildCandidateRefMap, formatRecommendInput } from "./prompt";
 import type { Candidate } from "./candidates";
 import type { TasteProfile } from "@/lib/taste-profile/synthesize";
+import { effortFromEnv, logUsage, modelFromEnv } from "@/lib/claude-config";
 
 export type Pick = {
   title_id: string;
@@ -51,7 +52,8 @@ export class RecommendError extends Error {
   }
 }
 
-const MODEL = "claude-opus-4-8";
+const MODEL = modelFromEnv("RECOMMEND_MODEL", "claude-opus-4-8");
+const EFFORT = effortFromEnv("RECOMMEND_EFFORT", "high");
 
 // A model instructed to "return ONLY valid JSON" will still occasionally wrap
 // the object in a ```json fence — strip one if present before parsing.
@@ -170,13 +172,15 @@ export async function getRecommendations(
       model: MODEL,
       max_tokens: 4096,
       thinking: { type: "adaptive" },
-      output_config: { effort: "high" },
+      output_config: { effort: EFFORT },
       system: SYSTEM_PROMPT,
       messages: [{ role: "user", content: userMessage }],
     });
   } catch (err) {
     throw new RecommendError("api_error", err instanceof Error ? err.message : String(err));
   }
+
+  logUsage("recommend", MODEL, response.usage);
 
   if (response.stop_reason === "refusal") {
     throw new RecommendError("refusal", "Claude declined to generate recommendations for this input");

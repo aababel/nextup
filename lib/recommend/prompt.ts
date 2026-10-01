@@ -83,6 +83,28 @@ export function buildCandidateRefMap(candidates: Candidate[]): Map<number, Candi
   return new Map(candidates.map((candidate, i) => [i + 1, candidate]));
 }
 
+const MAX_KEYWORDS_PER_CANDIDATE = 5;
+
+/**
+ * Shrinks one candidate for the prompt to cut input tokens: drops the id
+ * (the prompt uses refs), keeps only the first few keywords, and omits
+ * fields that are null or empty arrays.
+ */
+function compactCandidate(ref: number, candidate: Candidate): Record<string, unknown> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { id, ...rest } = candidate;
+  const fields: Record<string, unknown> = {
+    ref,
+    ...rest,
+    keywords: rest.keywords.slice(0, MAX_KEYWORDS_PER_CANDIDATE),
+  };
+  return Object.fromEntries(
+    Object.entries(fields).filter(
+      ([, value]) => value !== null && !(Array.isArray(value) && value.length === 0)
+    )
+  );
+}
+
 /**
  * Builds the user-turn input that accompanies SYSTEM_PROMPT: the taste
  * profile JSON, the user's free-text context, and the candidate list in
@@ -94,11 +116,10 @@ export function formatRecommendInput(
   candidates: Candidate[]
 ): string {
   const profileJson = JSON.stringify(profile, null, 2);
-  const promptCandidates = [...buildCandidateRefMap(candidates)].map(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    ([ref, { id, ...rest }]) => ({ ref, ...rest })
+  const promptCandidates = [...buildCandidateRefMap(candidates)].map(([ref, candidate]) =>
+    compactCandidate(ref, candidate)
   );
-  const candidatesJson = JSON.stringify(promptCandidates, null, 2);
+  const candidatesJson = JSON.stringify(promptCandidates);
 
   return `Taste profile:\n${profileJson}\n\nWhat they're in the mood for right now:\n"${context}"\n\nCandidate titles:\n${candidatesJson}`;
 }
